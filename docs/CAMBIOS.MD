@@ -1,25 +1,5 @@
 # CAMBIOS
 
-## 2026-06-10 00:18 - Link competition_id en dashboard thc-competiciones
-
-### Estado
-
-ESTADO: `CERRADA`
-
-### Que se cambio
-
-- Se anadio un data link al campo `competition_id` del panel `ACTIVAS` en Grafana.
-- El enlace usa `https://www.thehunter.com/#competitions/details/${__value.raw}`.
-- Se guardo el dashboard `thc-competiciones` como version `34`.
-- Se actualizo `scripts/create_grafana_domain_dashboards.py` para que el enlace no se pierda al regenerar dashboards.
-
-### Prueba funcional realizada
-
-- **PRUEBA_REAL**: `http://127.0.0.1:3001/d/thc-competiciones/thc-competiciones?orgId=1&from=now-6h&to=now&timezone=Europe%2FMadrid`
-- **DETALLE**: `[Antes: competition_id no tenia data link | Despues: click real en 174150 abre https://www.thehunter.com/#competitions/details/174150]`
-- **EVIDENCIA**: `C:\_MisProyectos\THC_API\evidencias\link_competition_id_thc_competiciones_20260610_001832.txt`
-- **CUMPLE**: `SI`
-
 ## 2026-06-09 21:43 - Quitar variable query0 de dashboard thc-competiciones
 
 ### Estado

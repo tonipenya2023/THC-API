@@ -131,20 +131,3 @@ URL local base del dashboard:
 - `http://localhost:3001/d/thc-competiciones/thc-competiciones?orgId=1&from=now-6h&to=now&timezone=Europe%2FMadrid`
 
 CUMPLE: SI
-
-## Estado actual de enlaces en thc-competiciones
-
-RESUELTO el enlace desde `competition_id` hacia la ficha publica de theHunter.
-
-Hecho:
-
-- En el panel `ACTIVAS` del dashboard `thc-competiciones`, el campo `competition_id` tiene data link.
-- URL configurada: `https://www.thehunter.com/#competitions/details/${__value.raw}`.
-- Dashboard guardado en Grafana como version `34`.
-- Prueba real realizada el `2026-06-10 00:18:32 +02:00`:
-  - URL origen: `http://127.0.0.1:3001/d/thc-competiciones/thc-competiciones?orgId=1&from=now-6h&to=now&timezone=Europe%2FMadrid`
-  - Click en `174150`.
-  - URL destino abierta: `https://www.thehunter.com/#competitions/details/174150`.
-- Evidencia: `evidencias/link_competition_id_thc_competiciones_20260610_001832.txt`.
-
-CUMPLE: SI

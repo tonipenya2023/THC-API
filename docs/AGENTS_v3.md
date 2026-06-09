@@ -191,30 +191,3 @@ El flujo normal es:
 LOCAL -> GITHUB
 
 Nunca traer cambios desde GitHub salvo orden expresa.
-
-# GIT - PROTECCIÓN LOCAL
-
-El repositorio local es la fuente de verdad.
-
-Queda prohibido ejecutar sin autorización expresa:
-
-- `git pull`
-- `git fetch`
-- `git reset`
-- `git reset --hard`
-- `git checkout .`
-- `git restore .`
-- `git clean`
-- `git merge`
-- `git rebase`
-
-Antes de cualquier operación Git destructiva, el agente debe detenerse y mostrar:
-
-- COMANDO EXACTO
-- RIESGO
-- ARCHIVOS AFECTADOS
-- COPIA DE SEGURIDAD NECESARIA
-
-Sin confirmación explícita del usuario, el comando no se ejecuta.
-
-GitHub nunca debe sobrescribir local salvo orden literal del usuario
