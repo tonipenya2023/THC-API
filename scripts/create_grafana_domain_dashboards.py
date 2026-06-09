@@ -13,9 +13,14 @@ from pathlib import Path
 
 GRAFANA_URL = "http://127.0.0.1:3001"
 TEST_UID = "adv42n7"
-AUTH_HEADER = "Basic YWRtaW46YWRtaW4="
+AUTH_HEADER = "Basic YWRtaW46c3lzdGVt"
 DATASOURCE = {"type": "grafana-postgresql-datasource", "uid": "afodoaxjtubr4e"}
 EVIDENCE_DIR = Path(__file__).resolve().parents[1] / "evidencias"
+COMPETITION_LINK = {
+    "title": "Abrir competicion",
+    "url": "https://www.thehunter.com/#competitions/details/${__value.raw}",
+    "targetBlank": True,
+}
 
 
 DASHBOARDS = [
@@ -128,6 +133,30 @@ def base_panel(template: dict, panel_id: int, title: str, raw_sql: str, x: int, 
     return panel
 
 
+def add_competition_id_link(panel: dict) -> None:
+    if panel.get("type") != "table":
+        return
+
+    overrides = panel.setdefault("fieldConfig", {}).setdefault("overrides", [])
+    competition_override = None
+    for override in overrides:
+        matcher = override.get("matcher", {})
+        if matcher.get("id") == "byName" and matcher.get("options") == "competition_id":
+            competition_override = override
+            break
+
+    if competition_override is None:
+        competition_override = {
+            "matcher": {"id": "byName", "options": "competition_id"},
+            "properties": [],
+        }
+        overrides.append(competition_override)
+
+    properties = competition_override.setdefault("properties", [])
+    properties[:] = [item for item in properties if item.get("id") != "links"]
+    properties.append({"id": "links", "value": [COMPETITION_LINK]})
+
+
 def build_dashboard(template: dict, spec: dict) -> dict:
     dashboard = copy.deepcopy(template)
     dashboard["id"] = None
@@ -153,7 +182,10 @@ def build_dashboard(template: dict, spec: dict) -> dict:
         w = 24 if columns == 1 else 12
         x = 0 if (index - 1) % columns == 0 else 12
         y = 1 + ((index - 1) // columns) * 8
-        panels.append(base_panel(table_template, index + 1, title, raw_sql, x, y, w))
+        panel = base_panel(table_template, index + 1, title, raw_sql, x, y, w)
+        if spec["uid"] == "thc-competiciones" and title == "Competiciones":
+            add_competition_id_link(panel)
+        panels.append(panel)
 
     dashboard["panels"] = panels
     return dashboard

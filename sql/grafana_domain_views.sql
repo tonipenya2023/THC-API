@@ -1,76 +1,59 @@
 DROP VIEW IF EXISTS api.vw_grafana_competitions CASCADE;
-CREATE VIEW api.vw_grafana_competitions AS
-WITH species AS (
-    SELECT
-        cis.parent_record_id,
-        string_agg(
-            COALESCE(NULLIF(cs.field_name, ''), 'Species ' || cis.scalar_value),
-            ', '
-            ORDER BY cis.item_index
-        ) AS species_names,
-        string_agg(
-            DISTINCT COALESCE(NULLIF(r.field_name, ''), 'Unknown'),
-            ', '
-        ) AS reserve_names
-    FROM query_competitions_info_species cis
-    LEFT JOIN query_catalog_species cs
-        ON safe_bigint(cs.field_id) = safe_bigint(cis.scalar_value)
-    LEFT JOIN query_catalog_reserves_species rs
-        ON safe_bigint(rs.scalar_value) = safe_bigint(cis.scalar_value)
-    LEFT JOIN query_catalog_reserves r
-        ON r.record_id = rs.parent_record_id
-    GROUP BY cis.parent_record_id
-),
-prizes AS (
-    SELECT
-        p_1.parent_record_id,
-        string_agg(
-            concat_ws(' ', NULLIF(r.field_amount, ''), NULLIF(r.field_define, ''), NULLIF(r.field_type, '')),
-            ', '
-            ORDER BY r.item_index
-        ) AS prize_summary
-    FROM query_competitions_info_prizes p_1
-    LEFT JOIN query_competitions_info_prizes_rewards r
-        ON r.parent_record_id = p_1.record_id
-    GROUP BY p_1.parent_record_id
-),
-entrants AS (
-    SELECT
-        parent_record_id,
-        count(*) AS entrants_loaded,
-        min(safe_numeric(field_points)) AS min_points,
-        max(safe_numeric(field_points)) AS max_points
-    FROM query_competitions_entrants
-    GROUP BY parent_record_id
-)
-SELECT
-    safe_bigint(i.field_id) AS competition_id,
+-- api.vw_grafana_competitions source
+
+CREATE OR REPLACE VIEW api.vw_grafana_competitions
+AS WITH species AS (
+         SELECT x.parent_record_id,
+            string_agg(x.species_name, ', '::text ORDER BY x.item_index) AS species_names,
+            string_agg((x.species_name || ': '::text) || COALESCE(x.reserve_names, 'Unknown'::text), ' | '::text ORDER BY x.item_index) AS species_reserves
+           FROM ( SELECT cis.parent_record_id,
+                    min(cis.item_index) AS item_index,
+                    safe_bigint(cis.scalar_value) AS species_id,
+                    COALESCE(NULLIF(cs.field_name, ''::text), 'Species '::text || cis.scalar_value) AS species_name,
+                    string_agg(DISTINCT COALESCE(NULLIF(cr.field_name, ''::text), 'Reserve '::text || cr.field_id), ', '::text) AS reserve_names
+                   FROM query_competitions_info_species cis
+                     LEFT JOIN query_catalog_species cs ON safe_bigint(cs.field_id) = safe_bigint(cis.scalar_value)
+                     LEFT JOIN query_catalog_reserves_species crs ON safe_bigint(crs.scalar_value) = safe_bigint(cis.scalar_value)
+                     LEFT JOIN query_catalog_reserves cr ON cr.record_id = crs.parent_record_id
+                  GROUP BY cis.parent_record_id, (safe_bigint(cis.scalar_value)), (COALESCE(NULLIF(cs.field_name, ''::text), 'Species '::text || cis.scalar_value))) x
+          GROUP BY x.parent_record_id
+        ), prizes AS (
+         SELECT p_1.parent_record_id,
+            string_agg(concat_ws(' '::text, NULLIF(r.field_amount, ''::text), NULLIF(r.field_define, ''::text), NULLIF(r.field_type, ''::text)), ', '::text ORDER BY r.item_index) AS prize_summary
+           FROM query_competitions_info_prizes p_1
+             LEFT JOIN query_competitions_info_prizes_rewards r ON r.parent_record_id = p_1.record_id
+          GROUP BY p_1.parent_record_id
+        ), entrants AS (
+         SELECT query_competitions_entrants.parent_record_id,
+            count(*) AS entrants_loaded,
+            min(safe_numeric(query_competitions_entrants.field_points)) AS min_points,
+            max(safe_numeric(query_competitions_entrants.field_points)) AS max_points
+           FROM query_competitions_entrants
+          GROUP BY query_competitions_entrants.parent_record_id
+        )
+ SELECT safe_bigint(i.field_id) AS competition_id,
     i.field_type_field_name AS competition_name,
     i.field_type_field_descriptionshort AS description_short,
     i.field_type_field_pointtype AS point_type,
     safe_timestamptz(i.field_start) AS start_at,
     safe_timestamptz(i.field_end) AS end_at,
-    CASE
-        WHEN i.field_finished = ANY (ARRAY['1', 'true', 'True']) THEN true
-        ELSE false
-    END AS finished,
+        CASE
+            WHEN i.field_finished = ANY (ARRAY['1'::text, 'true'::text, 'True'::text]) THEN true
+            ELSE false
+        END AS finished,
     safe_bigint(c.field_competitions_total) AS competitions_total,
     safe_bigint(c.field_entrants_total) AS entrants_total,
     e.entrants_loaded,
     e.min_points,
     e.max_points,
     s.species_names,
-    s.reserve_names,
+    s.species_reserves,
     p.prize_summary
-FROM query_competitions_info i
-LEFT JOIN query_competitions c
-    ON c.record_id = i.parent_record_id
-LEFT JOIN species s
-    ON s.parent_record_id = i.record_id
-LEFT JOIN prizes p
-    ON p.parent_record_id = i.record_id
-LEFT JOIN entrants e
-    ON e.parent_record_id = i.record_id;
+   FROM query_competitions_info i
+     LEFT JOIN query_competitions c ON c.record_id = i.parent_record_id
+     LEFT JOIN species s ON s.parent_record_id = i.record_id
+     LEFT JOIN prizes p ON p.parent_record_id = i.record_id
+     LEFT JOIN entrants e ON e.parent_record_id = i.record_id;
 
 DROP VIEW IF EXISTS api.vw_grafana_statistics_summary CASCADE;
 CREATE VIEW api.vw_grafana_statistics_summary AS
