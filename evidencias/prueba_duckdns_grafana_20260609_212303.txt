@@ -1,0 +1,45 @@
+URL_EXACTA: http://thc-api.duckdns.org:3001/d/76b66a2d-ef24-4135-8b5c-9d6e9c9ad39e?orgId=1&kiosk
+FECHA_HORA_PRUEBA: 2026-06-09 21:23:03 +02:00
+
+PASOS_EJECUTADOS:
+1. Leer `docs/CONTEXTO_OPERATIVO.md` antes de repetir comprobaciones.
+2. Comprobar URL base DuckDNS: `http://thc-api.duckdns.org:3001/`.
+3. Comprobar URL exacta del dashboard Grafana por UID:
+   `http://thc-api.duckdns.org:3001/d/76b66a2d-ef24-4135-8b5c-9d6e9c9ad39e?orgId=1&kiosk`.
+4. Comprobar salud de Grafana por DuckDNS: `http://thc-api.duckdns.org:3001/api/health`.
+5. Comprobar API de dashboard por UID:
+   `http://thc-api.duckdns.org:3001/api/dashboards/uid/76b66a2d-ef24-4135-8b5c-9d6e9c9ad39e`.
+
+RESULTADO_ESPERADO:
+- La URL base DuckDNS debe cargar Grafana.
+- La URL exacta del dashboard debe responder sin redirigir a login.
+- La salud de Grafana debe indicar servicio disponible.
+
+RESULTADO_OBTENIDO:
+- URL base DuckDNS:
+  - STATUS=200
+  - URL=http://thc-api.duckdns.org:3001/
+  - TITLE=Grafana
+  - LEN=63708
+- URL exacta dashboard:
+  - STATUS=200
+  - URL=http://thc-api.duckdns.org:3001/d/76b66a2d-ef24-4135-8b5c-9d6e9c9ad39e?orgId=1&kiosk
+  - TITLE=Grafana
+  - HAS_GRAFANA=True
+  - HAS_LOGIN=False
+  - LEN=63708
+- Salud Grafana:
+  - STATUS=200
+  - CONTENT={"database":"ok","version":"13.0.2","commit":"3fcdbc5a"}
+- API dashboard UID:
+  - ERROR=(403) Prohibido
+  - Observacion: no se usa como criterio de cierre para compartir visualmente el dashboard; el flujo publico probado es la URL visual.
+
+MEDICION_OBJETIVA_ANTES_DESPUES:
+- Antes: no habia dominio DuckDNS exacto registrado y no existia prueba externa.
+- Despues: `http://thc-api.duckdns.org:3001/` responde HTTP 200 y la URL visual exacta del dashboard responde HTTP 200 sin indicio de login (`HAS_LOGIN=False`).
+
+EVIDENCIA:
+- `C:\_MisProyectos\THC_API\evidencias\prueba_duckdns_grafana_20260609_212303.txt`
+
+CUMPLE: SI

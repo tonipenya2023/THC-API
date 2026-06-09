@@ -1,0 +1,1 @@
+"""THC API application package."""

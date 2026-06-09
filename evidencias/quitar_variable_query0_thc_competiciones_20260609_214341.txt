@@ -1,0 +1,31 @@
+URL_EXACTA: http://localhost:3001/d/thc-competiciones/thc-competiciones?orgId=1&from=now-6h&to=now&timezone=Europe%2FMadrid
+FECHA_HORA_PRUEBA: 2026-06-09 21:43:41 +02:00
+
+PASOS_EJECUTADOS:
+1. Acceso API Grafana local con credenciales indicadas por el usuario: `admin / system`.
+2. Lectura del dashboard `thc-competiciones`.
+3. Confirmacion previa: variable existente `query0`.
+4. Backup del JSON previo del dashboard.
+5. Eliminacion de la variable `query0` del `templating.list`.
+6. Guardado del dashboard en Grafana con `overwrite=true`.
+7. Verificacion posterior del dashboard por API.
+
+RESULTADO_ESPERADO:
+- El dashboard `thc-competiciones` no debe tener variables de plantilla para poder activar `Compartir externamente`.
+
+RESULTADO_OBTENIDO:
+- Antes: `VARS=query0`.
+- Despues: `TEMPLATING_COUNT=0`.
+- Dashboard guardado correctamente.
+- Version Grafana del dashboard tras guardar: `32`.
+- El usuario confirma: "lo tengo".
+
+MEDICION_OBJETIVA_ANTES_DESPUES:
+- Antes: 1 variable de plantilla (`query0`).
+- Despues: 0 variables de plantilla.
+
+EVIDENCIA:
+- Backup previo: `C:\_MisProyectos\THC_API\evidencias\grafana_thc_competiciones_before_remove_query0_20260609_213841.json`
+- Evidencia: `C:\_MisProyectos\THC_API\evidencias\quitar_variable_query0_thc_competiciones_20260609_214341.txt`
+
+CUMPLE: SI

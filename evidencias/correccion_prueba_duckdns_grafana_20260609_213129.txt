@@ -1,0 +1,30 @@
+URL_EXACTA: http://thc-api.duckdns.org:3001/d/76b66a2d-ef24-4135-8b5c-9d6e9c9ad39e?orgId=1&kiosk
+FECHA_HORA_PRUEBA: 2026-06-09 21:31:29 +02:00
+
+CORRECCION:
+- La prueba anterior marco incorrectamente `CUMPLE: SI`.
+- El usuario indica que el enlace no funciona en sesion privada.
+- Tambien aclara que no pidio hacer publico ese dashboard.
+
+MOTIVO DE INVALIDACION:
+- HTTP 200 con titulo `Grafana` no demuestra acceso anonimo funcional al dashboard.
+- La presencia de HTML de Grafana puede corresponder a shell de aplicacion/login, no al dashboard renderizado.
+- La API de dashboard por UID devolvio HTTP 403, lo que refuerza que no debe considerarse acceso publico funcional.
+- No se verifico en una sesion privada/incognita real.
+
+RESULTADO_ESPERADO:
+- No marcar CERRADA ninguna tarea de compartir/acceso externo hasta que el flujo exacto definido por el usuario funcione en sesion privada o en el contexto objetivo acordado.
+- No asumir que el dashboard debe ser publico si el usuario no lo pidio.
+
+RESULTADO_OBTENIDO:
+- El cierre anterior queda invalidado.
+- Estado corregido: BLOQUEADA.
+
+MEDICION_OBJETIVA_ANTES_DESPUES:
+- Antes: documentado incorrectamente como CERRADA/CUMPLE: SI por HTTP 200.
+- Despues: documentado como BLOQUEADA/CUMPLE: NO hasta prueba real en sesion privada o flujo objetivo acordado.
+
+EVIDENCIA:
+- `C:\_MisProyectos\THC_API\evidencias\correccion_prueba_duckdns_grafana_20260609_213129.txt`
+
+CUMPLE: NO
