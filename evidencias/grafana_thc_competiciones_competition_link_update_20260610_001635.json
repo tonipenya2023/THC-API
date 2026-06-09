@@ -1,0 +1,26 @@
+{
+  "backup_path": "C:\\_MisProyectos\\THC_API\\evidencias\\grafana_thc_competiciones_before_competition_link_20260610_001635.json",
+  "dashboard_uid": "thc-competiciones",
+  "dashboard_version_before": 33,
+  "dashboard_version_after": 34,
+  "updated_panels": 1,
+  "before_links": [],
+  "after_links": [
+    [
+      {
+        "targetBlank": true,
+        "title": "Abrir competicion",
+        "url": "https://www.thehunter.com/#competitions/details/${__value.raw}"
+      }
+    ]
+  ],
+  "save_result": {
+    "folderUid": "",
+    "id": 1781014284618,
+    "slug": "thc-competiciones",
+    "status": "success",
+    "uid": "thc-competiciones",
+    "url": "/d/thc-competiciones/thc-competiciones",
+    "version": 34
+  }
+}
