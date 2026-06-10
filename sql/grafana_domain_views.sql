@@ -78,36 +78,36 @@ CREATE VIEW api.vw_grafana_statistics_summary AS
 
 DROP VIEW IF EXISTS api.vw_grafana_statistics_species CASCADE;
 CREATE VIEW api.vw_grafana_statistics_species AS
-SELECT
-    api.species_icon_url(species_name) AS animal_icon_url,
-    species_id,
-    species_name,
-    kills,
-    ethical_kills,
-    ethical_pct,
-    spots,
-    tracks,
-    spots_per_kill,
-    tracks_per_kill,
-    kill_share_pct
-FROM api.vw_species_analytics;
+SELECT species_icon_url_by_define(species_define) AS animal_icon_url,
+    species_id ,
+    species_name "Especie",
+    kills "Muertes",
+    ethical_kills "Éticas",
+    ethical_pct "% Éticas",
+    spots "Marcajes",
+    tracks "Seguimientos",
+    spots_per_kill "Marcajes/Muertes",
+    tracks_per_kill "Seguientos/Muertes",
+    kill_share_pct "% Especie/Total Muertes"
+   FROM vw_species_analytics;
 
 DROP VIEW IF EXISTS api.vw_grafana_statistics_weapons CASCADE;
 CREATE VIEW api.vw_grafana_statistics_weapons AS
-SELECT
-    weapon_id,
-    weapon_name,
-    weapon_type,
-    hits,
-    kills,
-    misses,
-    ethical_kills,
-    accuracy_pct,
-    ethical_pct,
-    lethality_pct,
-    avg_distance_per_kill,
-    usage_kill_share_pct
-FROM api.vw_weapon_analytics;
+SELECT weapon_id,
+    weapon_icon_url "Icono Munición",
+    weapon_name "Munición",
+    weapon_type "Tipo Munición",
+    weapon_type_description "Descripción Tipo Arma",
+    hits "Disparos",
+    kills "Muertes",
+    misses "Fallidos",
+    ethical_kills "Muertes Éticas",
+    accuracy_pct "% Precisión",
+    ethical_pct "% Eticas",
+    lethality_pct "% Muertes/Disparo",
+    avg_distance_per_kill "Media Distancia/Muerte",
+    usage_kill_share_pct "% Arma/Total Muertes"
+   FROM vw_weapon_analytics;
 
 DROP VIEW IF EXISTS api.vw_grafana_expeditions CASCADE;
 CREATE VIEW api.vw_grafana_expeditions AS
