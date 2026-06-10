@@ -374,3 +374,75 @@ CREATE TABLE IF NOT EXISTS api.query_table_stats (
     derived_records integer NOT NULL,
     PRIMARY KEY (query_sync_run_id, function_name)
 );
+
+CREATE TABLE IF NOT EXISTS api.dashboard_refresh_control (
+    refresh_key text PRIMARY KEY,
+    status text NOT NULL CHECK (status IN ('queued', 'running', 'ok', 'failed')),
+    requested_at timestamptz,
+    started_at timestamptz,
+    last_completed_at timestamptz,
+    last_attempted_at timestamptz,
+    throttle_interval interval NOT NULL DEFAULT interval '10 minutes',
+    functions text[] NOT NULL,
+    last_query_sync_run_id bigint REFERENCES api.query_sync_runs(query_sync_run_id),
+    error_message text,
+    updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE OR REPLACE FUNCTION api.request_dashboard_refresh(
+    p_refresh_key text,
+    p_throttle_interval interval DEFAULT interval '10 minutes'
+)
+RETURNS TABLE (
+    refresh_key text,
+    status text,
+    queued boolean,
+    requested_at timestamptz,
+    last_completed_at timestamptz
+)
+LANGUAGE plpgsql
+VOLATILE
+AS $$
+DECLARE
+    v_now timestamptz := now();
+BEGIN
+    INSERT INTO api.dashboard_refresh_control (
+        refresh_key,
+        status,
+        requested_at,
+        throttle_interval,
+        functions,
+        updated_at
+    )
+    VALUES (
+        p_refresh_key,
+        'queued',
+        v_now,
+        p_throttle_interval,
+        ARRAY['competition_detail'],
+        v_now
+    )
+    ON CONFLICT ON CONSTRAINT dashboard_refresh_control_pkey DO NOTHING;
+
+    UPDATE api.dashboard_refresh_control c
+    SET status = 'queued',
+        requested_at = v_now,
+        throttle_interval = p_throttle_interval,
+        functions = ARRAY['competition_detail'],
+        error_message = NULL,
+        updated_at = v_now
+    WHERE c.refresh_key = p_refresh_key
+      AND c.status NOT IN ('queued', 'running')
+      AND COALESCE(c.last_completed_at, 'epoch'::timestamptz) <= v_now - p_throttle_interval;
+
+    RETURN QUERY
+    SELECT
+        c.refresh_key,
+        c.status,
+        c.status = 'queued' AS queued,
+        c.requested_at,
+        c.last_completed_at
+    FROM api.dashboard_refresh_control c
+    WHERE c.refresh_key = p_refresh_key;
+END
+$$;

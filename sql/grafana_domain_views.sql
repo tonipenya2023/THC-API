@@ -2,7 +2,10 @@ DROP VIEW IF EXISTS api.vw_grafana_competitions CASCADE;
 -- api.vw_grafana_competitions source
 
 CREATE OR REPLACE VIEW api.vw_grafana_competitions
-AS WITH species AS (
+AS WITH refresh_request AS MATERIALIZED (
+         SELECT *
+           FROM api.request_dashboard_refresh('grafana_competitions', interval '10 minutes')
+        ), species AS (
          SELECT x.parent_record_id,
             string_agg(x.species_name, ', '::text ORDER BY x.item_index) AS species_names,
             string_agg((x.species_name || ': '::text) || COALESCE(x.reserve_names, 'Unknown'::text), ' | '::text ORDER BY x.item_index) AS species_reserves
@@ -48,27 +51,30 @@ AS WITH species AS (
     e.max_points,
     s.species_names,
     s.species_reserves,
-    p.prize_summary
+    p.prize_summary,
+    rr.status AS refresh_status,
+    rr.requested_at AS refresh_requested_at,
+    rr.last_completed_at AS refresh_completed_at
    FROM query_competitions_info i
      LEFT JOIN query_competitions c ON c.record_id = i.parent_record_id
      LEFT JOIN species s ON s.parent_record_id = i.record_id
      LEFT JOIN prizes p ON p.parent_record_id = i.record_id
-     LEFT JOIN entrants e ON e.parent_record_id = i.record_id;
+     LEFT JOIN entrants e ON e.parent_record_id = i.record_id
+     CROSS JOIN refresh_request rr;
 
 DROP VIEW IF EXISTS api.vw_grafana_statistics_summary CASCADE;
 CREATE VIEW api.vw_grafana_statistics_summary AS
-SELECT
-    handle,
-    hunter_score,
-    rank_no,
-    lifetime_kills,
-    lifetime_ethical_kills,
-    lifetime_spots,
-    lifetime_tracks,
-    lifetime_hours,
-    lifetime_km,
-    ROUND(lifetime_ethical_kills::numeric / NULLIF(lifetime_kills, 0) * 100, 2) AS ethical_pct
-FROM api.vw_hunter_overview;
+ SELECT handle as "Cazador",
+    hunter_score as "Hunter Score",
+    rank_no as "Rank #",
+    lifetime_kills as "Muertes",
+    lifetime_ethical_kills as "Muertes Éticas",
+    lifetime_spots as "Marcajes",
+    lifetime_tracks as "Seguimientos",
+    lifetime_hours as "Horas",
+    lifetime_km as "Km",
+    round(lifetime_ethical_kills / NULLIF(lifetime_kills, 0::numeric) * 100::numeric, 2) as "% Muertes Eticas"
+   FROM vw_hunter_overview;
 
 DROP VIEW IF EXISTS api.vw_grafana_statistics_species CASCADE;
 CREATE VIEW api.vw_grafana_statistics_species AS

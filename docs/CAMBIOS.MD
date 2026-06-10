@@ -1,5 +1,46 @@
 # CAMBIOS
 
+## 2026-06-10 03:52 - Sincronizar solo competiciones activas
+
+### Estado
+
+ESTADO: `CERRADA`
+
+### Que se cambio
+
+- Se sustituyo el limite fijo de 100 competiciones por un filtro de competiciones activas.
+- El refresh de `competition_detail` ahora solo sincroniza competiciones con `start <= now < end` y `finished=false`.
+- Se mantiene proteccion para el caso de 0 competiciones activas, creando tablas vacias compatibles con las vistas de Grafana.
+
+### Prueba funcional realizada
+
+- **PRUEBA_REAL**: `http://thc-api.duckdns.org:3001/public-dashboards/e21d53e423fa42aeb30c00acc251f64f`
+- **DETALLE**: `[API real: 119 competiciones fuente, 81 activas tras filtro; worker completa query_sync_run_id=652; vista final rows=81, future_rows=0, finished_rows=0; dashboard publico carga THC - Competiciones / ACTIVAS sin login ni Forbidden]`
+- **EVIDENCIA**: `C:\_MisProyectos\THC_API\evidencias\solo_competiciones_activas_refresh_20260610_035221.txt`
+- **CUMPLE**: `SI`
+
+## 2026-06-10 03:32 - Refresh bajo demanda con throttling para thc-competiciones
+
+### Estado
+
+ESTADO: `CERRADA`
+
+### Que se cambio
+
+- Se implemento una tabla de control en PostgreSQL: `api.dashboard_refresh_control`.
+- Se anadio la funcion `api.request_dashboard_refresh(...)` para encolar refrescos si han pasado mas de 10 minutos y no hay otro refresco `queued` o `running`.
+- Se conecto `api.vw_grafana_competitions` con esa funcion para que la consulta de Grafana devuelva datos actuales y deje el refresco encolado.
+- Se anadio `scripts/refresh_worker.py` como worker externo que toma trabajos `queued`, marca `running`, ejecuta `competition_detail`, reaplica vistas dentro de la misma transaccion y marca `ok` o `failed`.
+- Se anadio `run_refresh_worker.bat`.
+- Se ajusto `scripts/apply_views.py` para aplicar `schema.sql` antes de las vistas.
+
+### Prueba funcional realizada
+
+- **PRUEBA_REAL**: `http://thc-api.duckdns.org:3001/public-dashboards/e21d53e423fa42aeb30c00acc251f64f`
+- **DETALLE**: `[Public dashboard probado en navegador: muestra THC - Competiciones / ACTIVAS con datos y sin login ni Forbidden; al forzar last_completed_at > 10 minutos, la recarga publica encola queued; el worker externo completa query_sync_run_id=651 y deja status ok]`
+- **EVIDENCIA**: `C:\_MisProyectos\THC_API\evidencias\refresh_throttling_competiciones_20260610_034227.txt`
+- **CUMPLE**: `SI`
+
 ## 2026-06-09 21:43 - Quitar variable query0 de dashboard thc-competiciones
 
 ### Estado

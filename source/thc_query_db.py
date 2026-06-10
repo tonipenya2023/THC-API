@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import datetime as dt
 import re
 from collections import defaultdict
+from pathlib import Path
 from typing import Any
 
 from psycopg2 import sql
@@ -17,7 +19,6 @@ from .thc_db import apply_schema, connect
 _IDENTIFIER_RE = re.compile(r"[^a-z0-9_]+")
 SYNC_LEADERBOARD_RECORD_LIMIT = 10
 SYNC_LANEBANDIT_RECORD_LIMIT = 10
-SYNC_COMPETITION_LIST_LIMIT = 100
 SYNC_SKIP_FUNCTIONS = {
     "competitions_upcoming": "used only as source ids for query_competitions",
     "competitions_previous": "replaced by query_competitions",
@@ -163,6 +164,70 @@ _WEAPON_STATS_SOURCES = {
 }
 _WEAPON_STAT_METRICS = ("distance", "ethical_kills", "hits", "kills", "misses")
 _WEAPON_FIELD_RE = re.compile(r"^field_([0-9]+)_field_(distance|ethical_kills|hits|kills|misses)$")
+_EMPTY_COMPETITION_TABLES: dict[str, list[tuple[str, str]]] = {
+    "query_competitions": [
+        ("record_id", "bigint PRIMARY KEY"),
+        ("root_record_no", "bigint"),
+        ("item_key", "text"),
+        ("field_competition_id", "text"),
+        ("field_competitions_total", "text"),
+        ("field_entrants_total", "text"),
+    ],
+    "query_competitions_info": [
+        ("record_id", "bigint PRIMARY KEY"),
+        ("parent_record_id", "bigint"),
+        ("item_index", "integer"),
+        ("item_key", "text"),
+        ("scalar_value", "text"),
+        ("field_end", "text"),
+        ("field_entrants", "text"),
+        ("field_finished", "text"),
+        ("field_id", "text"),
+        ("field_start", "text"),
+        ("field_type_field_attempts", "text"),
+        ("field_type_field_descriptionshort", "text"),
+        ("field_type_field_entrantrules", "text"),
+        ("field_type_field_id", "text"),
+        ("field_type_field_image_field_class", "text"),
+        ("field_type_field_image_field_full", "text"),
+        ("field_type_field_name", "text"),
+        ("field_type_field_pointtype", "text"),
+        ("field_type_field_rules", "text"),
+        ("field_type_field_singleplayer", "text"),
+    ],
+    "query_competitions_info_species": [
+        ("record_id", "bigint PRIMARY KEY"),
+        ("parent_record_id", "bigint"),
+        ("item_index", "integer"),
+        ("item_key", "text"),
+        ("scalar_value", "text"),
+    ],
+    "query_competitions_info_prizes": [
+        ("record_id", "bigint PRIMARY KEY"),
+        ("parent_record_id", "bigint"),
+        ("item_index", "integer"),
+        ("item_key", "text"),
+        ("scalar_value", "text"),
+    ],
+    "query_competitions_info_prizes_rewards": [
+        ("record_id", "bigint PRIMARY KEY"),
+        ("parent_record_id", "bigint"),
+        ("item_index", "integer"),
+        ("item_key", "text"),
+        ("scalar_value", "text"),
+        ("field_amount", "text"),
+        ("field_define", "text"),
+        ("field_type", "text"),
+    ],
+    "query_competitions_entrants": [
+        ("record_id", "bigint PRIMARY KEY"),
+        ("parent_record_id", "bigint"),
+        ("item_index", "integer"),
+        ("item_key", "text"),
+        ("scalar_value", "text"),
+        ("field_points", "text"),
+    ],
+}
 
 
 def _number_text(value: Any) -> str | None:
@@ -264,6 +329,28 @@ def _create_and_fill_weapon_stats(cursor: Any, tables: dict[str, list[dict[str, 
     return counts
 
 
+def _create_empty_competition_tables(cursor: Any) -> dict[str, Any]:
+    for table, columns in _EMPTY_COMPETITION_TABLES.items():
+        cursor.execute(
+            sql.SQL("CREATE TABLE api.{} ({})").format(
+                sql.Identifier(table),
+                sql.SQL(", ").join(
+                    sql.SQL("{} {}").format(sql.Identifier(name), sql.SQL(kind))
+                    for name, kind in columns
+                ),
+            )
+        )
+    return {
+        "root_table": "query_competitions",
+        "derived_tables": [
+            table for table in _EMPTY_COMPETITION_TABLES if table != "query_competitions"
+        ],
+        "root_records": 0,
+        "derived_records": 0,
+        "weapon_stats_tables": {},
+    }
+
+
 def _drop_query_tables(cursor: Any, root_table: str) -> None:
     cursor.execute(
         """
@@ -363,14 +450,37 @@ def _limit_list_key(value: Any, key: str, limit: int) -> Any:
     return limited
 
 
-def _unfinished_competitions(value: Any, limit: int) -> list[dict[str, Any]]:
+def _competition_epoch(value: Any) -> int | None:
+    if value in (None, ""):
+        return None
+    if isinstance(value, (int, float)):
+        return int(value / 1000) if value > 9999999999 else int(value)
+    text = str(value).strip()
+    if not text:
+        return None
+    if re.fullmatch(r"-?[0-9]+", text):
+        number = int(text)
+        return int(number / 1000) if number > 9999999999 else number
+    try:
+        parsed = dt.datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=dt.timezone.utc)
+    return int(parsed.timestamp())
+
+
+def _active_competitions(value: Any) -> list[dict[str, Any]]:
+    now_epoch = int(dt.datetime.now(dt.timezone.utc).timestamp())
     rows = _competition_rows(value)
-    unfinished = [
+    return [
         row
         for row in rows
         if str(row.get("finished", "0")).lower() in {"0", "false", ""}
+        and (start_epoch := _competition_epoch(row.get("start"))) is not None
+        and (end_epoch := _competition_epoch(row.get("end"))) is not None
+        and start_epoch <= now_epoch < end_epoch
     ]
-    return unfinished[:limit]
 
 
 def _without_competition_history(value: Any) -> Any:
@@ -384,10 +494,7 @@ def _without_competition_history(value: Any) -> Any:
 def _sync_all_competition_details(lang: str) -> list[dict[str, Any]]:
     seen: set[int] = set()
     details: list[dict[str, Any]] = []
-    source = _unfinished_competitions(
-        thc_client.get_competitions_upcoming(lang),
-        SYNC_COMPETITION_LIST_LIMIT,
-    )
+    source = _active_competitions(thc_client.get_competitions_upcoming(lang))
     for competition in source:
         competition_id = _competition_id(competition)
         if competition_id in (None, ""):
@@ -441,10 +548,7 @@ def _sync_query_value(function_name: str, params: dict[str, Any], lang: str) -> 
             thc_client.get_leaderboards_range(), SYNC_LEADERBOARD_RECORD_LIMIT
         )
     if function_name == "competitions_upcoming":
-        return _unfinished_competitions(
-            thc_client.get_competitions_upcoming(lang),
-            SYNC_COMPETITION_LIST_LIMIT,
-        )
+        return _active_competitions(thc_client.get_competitions_upcoming(lang))
     if function_name == "leaderboards_hall_of_fame":
         return _limit_records(
             call_function(function_name, params), SYNC_LEADERBOARD_RECORD_LIMIT
@@ -470,6 +574,7 @@ def sync_queries(
     lang: str = "es_ES",
     oauth_access_token: str | None = None,
     function_names: list[str] | None = None,
+    apply_view_sql_paths: list[Path] | None = None,
 ) -> dict[str, Any]:
     """Refresh physical SQL tables for reusable queries without storing JSON."""
     selected = function_names or list(FUNCTIONS)
@@ -511,6 +616,25 @@ def sync_queries(
                         _drop_legacy_competition_tables(cursor)
                     tables, parents = _tables(value, root_table)
                     _drop_query_tables(cursor, root_table)
+                    if root_table == "query_competitions" and not tables.get(root_table):
+                        stats[function_name] = _create_empty_competition_tables(cursor)
+                        cursor.execute(
+                            """
+                            INSERT INTO api.query_table_stats (
+                                query_sync_run_id, function_name, root_table,
+                                derived_table, root_records, derived_records
+                            ) VALUES (%s, %s, %s, %s, %s, %s)
+                            """,
+                            (
+                                sync_run_id,
+                                function_name,
+                                "query_competitions",
+                                ", ".join(stats[function_name]["derived_tables"]),
+                                0,
+                                0,
+                            ),
+                        )
+                        continue
                     for table, rows in tables.items():
                         if table == root_table:
                             fixed_columns = [
@@ -571,6 +695,8 @@ def sync_queries(
                     """,
                     (len(stats), sync_run_id),
                 )
+                for sql_path in apply_view_sql_paths or []:
+                    cursor.execute(Path(sql_path).read_text(encoding="utf-8"))
         return {"query_sync_run_id": sync_run_id, "functions": stats}
     finally:
         connection.close()

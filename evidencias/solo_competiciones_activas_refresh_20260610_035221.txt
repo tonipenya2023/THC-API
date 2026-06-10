@@ -1,0 +1,71 @@
+TAREA: sincronizar solo competiciones activas en refresh thc-competiciones
+ESTADO: CERRADA
+
+URL_EXACTA:
+http://thc-api.duckdns.org:3001/public-dashboards/e21d53e423fa42aeb30c00acc251f64f
+
+FECHA_HORA_PRUEBA:
+2026-06-10 03:52:21 +02:00
+
+PASOS_EJECUTADOS:
+1. Se cambio el filtro de sincronizacion de competiciones para usar solo competiciones activas: `start <= now < end` y `finished=false`.
+2. Se elimino el limite fijo de `SYNC_COMPETITION_LIST_LIMIT = 100` para `competition_detail`.
+3. Se valido contra la API real: `total_upcoming_api=119`, `active_after_filter=81`.
+4. Se encolo el refresh `grafana_competitions`.
+5. Se ejecuto el worker externo con `python -u scripts\refresh_worker.py --once`.
+6. Se consulto `api.vw_grafana_competitions` para medir filas, futuras y finalizadas.
+7. Se comprobo la URL publica exacta con `curl.exe`.
+8. Se abrio la URL publica exacta en navegador integrado.
+
+RESULTADO_ESPERADO:
+La sincronizacion de competiciones no debe usar el limite fijo anterior. Debe sincronizar exclusivamente competiciones activas, excluyendo las finalizadas y las que aun no han empezado. El dashboard publico debe seguir cargando datos.
+
+RESULTADO_OBTENIDO:
+- API real `competitions_upcoming`: 119 registros.
+- Filtro nuevo de activas: 81 registros.
+- Worker externo completado: `Refresh grafana_competitions completed with query_sync_run_id=652`.
+- Estadistica de sync:
+  - `query_sync_run_id=652`
+  - `function_name=competition_detail`
+  - `root_table=query_competitions`
+  - `root_records=81`
+  - `derived_records=1430`
+  - `derived_table=query_competitions_info, query_competitions_info_prizes, query_competitions_info_prizes_rewards, query_competitions_info_species, query_competitions_entrants`
+- Vista final:
+  - `rows=81`
+  - `future_rows=0`
+  - `finished_rows=0`
+  - `min_start=2026-06-08 09:00:00+02`
+  - `max_end=2026-06-11 09:00:00+02`
+  - `refresh_status=ok`
+- Control final:
+  - `status=ok`
+  - `requested_at=2026-06-10 03:51:04.804569+02`
+  - `started_at=2026-06-10 03:51:13.064399+02`
+  - `last_completed_at=2026-06-10 03:52:02.122387+02`
+  - `last_query_sync_run_id=652`
+  - `error_message=NULL`
+- URL publica:
+  - `HTTP_STATUS=200`
+  - Navegador: titulo `Grafana`
+  - Visible: `THC - Competiciones`, `ACTIVAS`, columnas `competition_id`, `especies`, `competicion`
+  - `hasForbidden=false`
+  - `hasLogin=false`
+
+MEDICION_OBJETIVA_ANTES_DESPUES:
+ANTES:
+- Refresh anterior `query_sync_run_id=651`: `root_records=100`.
+- Criterio anterior: competiciones no finalizadas recortadas por limite fijo de 100.
+
+DESPUES:
+- API fuente total: 119.
+- Competiciones activas detectadas: 81.
+- Refresh nuevo `query_sync_run_id=652`: `root_records=81`.
+- Filas futuras en vista: 0.
+- Filas finalizadas en vista: 0.
+- Duracion observada del worker: 50.9 segundos.
+
+EVIDENCIA:
+C:\_MisProyectos\THC_API\evidencias\solo_competiciones_activas_refresh_20260610_035221.txt
+
+CUMPLE: SI

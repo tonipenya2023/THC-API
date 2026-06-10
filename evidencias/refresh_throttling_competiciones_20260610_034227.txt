@@ -1,0 +1,69 @@
+TAREA: refresh bajo demanda con throttling para dashboard thc-competiciones
+ESTADO: CERRADA
+
+URL_EXACTA:
+http://thc-api.duckdns.org:3001/public-dashboards/e21d53e423fa42aeb30c00acc251f64f
+
+FECHA_HORA_PRUEBA:
+2026-06-10 03:42:27 +02:00
+
+PASOS_EJECUTADOS:
+1. Se aplico `schema.sql` y las vistas con `python scripts\apply_views.py`.
+2. Se consulto `api.vw_grafana_competitions` y `api.dashboard_refresh_control`.
+3. Se ejecuto el worker externo con `python -u scripts\refresh_worker.py --once`.
+4. Se abrio la URL publica exacta en navegador integrado.
+5. Se verifico que el dashboard publico muestra datos y no muestra login ni Forbidden.
+6. Se forzo la tabla de control a un estado antiguo: `last_completed_at=now() - interval '11 minutes'`.
+7. Se recargo la URL publica exacta.
+8. Se verifico que la recarga publica dejo `api.dashboard_refresh_control.status='queued'` mientras seguia devolviendo 100 filas.
+9. Se ejecuto de nuevo el worker externo con `python -u scripts\refresh_worker.py --once`.
+10. Se verifico que `api.dashboard_refresh_control.status='ok'`.
+
+RESULTADO_ESPERADO:
+Cuando un usuario abre el dashboard publico, Grafana consulta Postgres y recibe los datos precalculados sin esperar al refresco lento. Si han pasado mas de 10 minutos desde el ultimo refresco y no hay otro proceso en `queued` o `running`, la consulta deja un refresco encolado para el worker externo. El worker toma el trabajo, marca `running`, ejecuta `competition_detail`, reaplica las vistas y deja el control en `ok`.
+
+RESULTADO_OBTENIDO:
+La URL publica exacta carga correctamente:
+- Titulo navegador: `Grafana`.
+- Texto visible: `THC - Competiciones`, `ACTIVAS`, columnas `competition_id`, `especies`, `competicion`, `descripcion`, `fin`.
+- Datos visibles: competiciones como `174150 Alce Mother Moose` y `174162 Anad(e) Friso Open Season`.
+- `hasForbidden=false`.
+- `hasLogin=false`.
+
+El flujo bajo demanda queda probado:
+- Tras forzar `last_completed_at` a mas de 10 minutos, la recarga del public dashboard dejo:
+  - `rows=100`
+  - `refresh_status=queued`
+  - `requested_at=2026-06-10 03:40:49.084658+02`
+  - `completed_at=2026-06-10 03:29:37.158440+02`
+- Worker externo:
+  - Comando: `python -u scripts\refresh_worker.py --once`
+  - Resultado: `Refresh grafana_competitions completed with query_sync_run_id=651`
+- Estado final:
+  - `rows=100`
+  - `refresh_status=ok`
+  - `requested_at=2026-06-10 03:40:49.084658+02`
+  - `completed_at=2026-06-10 03:42:13.063094+02`
+  - `status=ok`
+  - `started_at=2026-06-10 03:41:20.905993+02`
+  - `last_completed_at=2026-06-10 03:42:13.063094+02`
+  - `last_query_sync_run_id=651`
+  - `error_message=NULL`
+
+MEDICION_OBJETIVA_ANTES_DESPUES:
+ANTES:
+- Control forzado a antiguo: `last_completed_at=now() - interval '11 minutes'`.
+- La recarga de la URL publica no bloqueo la carga: el dashboard mostro 100 filas actuales.
+- Estado tras recarga publica: `queued`.
+
+DESPUES:
+- Worker completo el refresco con `query_sync_run_id=651`.
+- Estado final: `ok`.
+- Filas devueltas por `api.vw_grafana_competitions`: 100.
+- Duracion observada del ultimo worker: 54.1 segundos.
+- Diferencia solicitada/completada: de `03:40:49.084658+02` a `03:42:13.063094+02`.
+
+EVIDENCIA:
+C:\_MisProyectos\THC_API\evidencias\refresh_throttling_competiciones_20260610_034227.txt
+
+CUMPLE: SI

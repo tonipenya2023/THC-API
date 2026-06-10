@@ -88,7 +88,7 @@ python thc_api.py
 python scripts\sync_catalogs.py --lang es_ES
 python scripts\sync_queries.py --user-id 29509787 --lang es_ES
 python scripts\sync_queries.py --user-id 29509787 --lang es_ES --oauth-access-token TU_TOKEN
-python scriptspply_views.py
+python scripts\apply_views.py
 python scripts\inspect_html.py
 python scripts\create_metabase_dashboard.py --list-databases
 python scripts\create_metabase_dashboard.py
@@ -96,7 +96,7 @@ python scripts\create_metabase_dashboard.py
 
 ## Funciones disponibles en `/api/functions`
 
-Total detectado por código: **53** funciones.
+Total detectado por código: **53** funciones    
 
 53
 

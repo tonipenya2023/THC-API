@@ -7,6 +7,7 @@ import psycopg2
 
 
 SQL_DIR = Path(__file__).resolve().parents[1] / "sql"
+SCHEMA_PATH = SQL_DIR / "schema.sql"
 SQL_PATHS = [
     SQL_DIR / "dashboard_views.sql",
     SQL_DIR / "vistas_rangos.sql",
@@ -25,6 +26,9 @@ def main() -> None:
             password=password
         )
         cursor = conn.cursor()
+
+        print(f"Applying {SCHEMA_PATH}...")
+        cursor.execute(SCHEMA_PATH.read_text(encoding="utf-8"))
         
         for sql_path in SQL_PATHS:
             print(f"Applying {sql_path}...")
