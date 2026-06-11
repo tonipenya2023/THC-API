@@ -21,6 +21,38 @@ COMPETITION_LINK = {
     "url": "https://www.thehunter.com/#competitions/details/${__value.raw}",
     "targetBlank": True,
 }
+PHOTO_LINK = {
+    "title": "Abrir foto",
+    "url": "${__value.raw}",
+    "targetBlank": True,
+}
+EXPEDITION_KILL_ICON_SQL = """CASE
+    WHEN gender = '1' AND species_name = 'Alpine Ibex' THEN 'https://static.wikia.nocookie.net/thehunter/images/e/e8/Alpine_ibex_female_common.png/revision/latest/scale-to-width-down/60?cb=20240427021810&path-prefix=es'
+    WHEN gender = '1' AND species_name = 'Axis Deer' THEN 'https://static.wikia.nocookie.net/thehunter/images/e/ec/Axis_deer_female_common.png/revision/latest/scale-to-width-down/60?cb=20240427021809&path-prefix=es'
+    WHEN gender = '1' AND species_name = 'Banteng' THEN 'https://static.wikia.nocookie.net/thehunter/images/a/a3/Banteng_female_common.png/revision/latest/scale-to-width-down/60?cb=20240427021810&path-prefix=es'
+    WHEN gender = '1' AND species_name = 'Bighorn Sheep' THEN 'https://static.wikia.nocookie.net/thehunter/images/7/7c/Bighorn_sheep_female_common.png/revision/latest/scale-to-width-down/60?cb=20240427021810&path-prefix=es'
+    WHEN gender = '1' AND species_name = 'Blacktail Deer' THEN 'https://static.wikia.nocookie.net/thehunter/images/4/43/Blacktail_deer_female_common.png/revision/latest/scale-to-width-down/60?cb=20240427021810&path-prefix=es'
+    WHEN gender = '1' AND species_name = 'Dall Sheep' THEN 'https://static.wikia.nocookie.net/thehunter/images/9/92/Dall_sheep_female_common.png/revision/latest/scale-to-width-down/60?cb=20240427021811&path-prefix=es'
+    WHEN gender = '1' AND species_name = 'Fallow Deer' THEN 'https://static.wikia.nocookie.net/thehunter/images/5/5b/Fallow_deer_female_common.png/revision/latest/scale-to-width-down/60?cb=20240427021810&path-prefix=es'
+    WHEN gender = '1' AND species_name = 'Feral Hog' THEN 'https://static.wikia.nocookie.net/thehunter/images/6/6b/Feral_hog_female_common.png/revision/latest/scale-to-width-down/60?cb=20240427021812&path-prefix=es'
+    WHEN gender = '1' AND species_name = 'Moose' THEN 'https://static.wikia.nocookie.net/thehunter/images/1/19/Moose_female_common.png/revision/latest/scale-to-width-down/60?cb=20240427021813&path-prefix=es'
+    WHEN gender = '1' AND species_name = 'Mule Deer' THEN 'https://static.wikia.nocookie.net/thehunter/images/c/c0/Mule_deer_female_common.png/revision/latest/scale-to-width-down/60?cb=20240427021813&path-prefix=es'
+    WHEN gender = '1' AND species_name = 'Pheasant' THEN 'https://static.wikia.nocookie.net/thehunter/images/6/65/Pheasant_female_common.png/revision/latest/scale-to-width-down/60?cb=20240427021813&path-prefix=es'
+    WHEN gender = '1' AND species_name = 'Puma' THEN 'https://static.wikia.nocookie.net/thehunter/images/1/12/Puma_female_common.png/revision/latest/scale-to-width-down/60?cb=20240427021814&path-prefix=es'
+    WHEN gender = '1' AND species_name = 'Red Deer' THEN 'https://static.wikia.nocookie.net/thehunter/images/6/69/Red_deer_female_common.png/revision/latest/scale-to-width-down/60?cb=20240427021814&path-prefix=es'
+    WHEN gender = '1' AND species_name = 'Red Kangaroo' THEN 'https://static.wikia.nocookie.net/thehunter/images/d/d7/Red_kangaroo_female_common.png/revision/latest/scale-to-width-down/60?cb=20240427021814&path-prefix=es'
+    WHEN gender = '1' AND species_name = 'Rock Ptarmigan' THEN 'https://static.wikia.nocookie.net/thehunter/images/c/cf/Rock_ptarmigan_female_common.png/revision/latest/scale-to-width-down/60?cb=20240427021814&path-prefix=es'
+    WHEN gender = '1' AND species_name = 'Rocky Mountain Elk' THEN 'https://static.wikia.nocookie.net/thehunter/images/4/47/Rocky_mountain_elk_female_common.png/revision/latest/scale-to-width-down/60?cb=20240427021814&path-prefix=es'
+    WHEN gender = '1' AND species_name = 'Roe Deer' THEN 'https://static.wikia.nocookie.net/thehunter/images/4/48/Roe_deer_female_common.png/revision/latest/scale-to-width-down/60?cb=20240427021814&path-prefix=es'
+    WHEN gender = '1' AND species_name = 'Roosevelt Elk' THEN 'https://static.wikia.nocookie.net/thehunter/images/8/86/Roosevelt_elk_female_common.png/revision/latest/scale-to-width-down/60?cb=20240427021815&path-prefix=es'
+    WHEN gender = '1' AND species_name = 'Sitka Deer' THEN 'https://static.wikia.nocookie.net/thehunter/images/f/f0/Sitka_deer_female_common.png/revision/latest/scale-to-width-down/60?cb=20240427021813&path-prefix=es'
+    WHEN gender = '1' AND species_name = 'Turkey' THEN 'https://static.wikia.nocookie.net/thehunter/images/f/fa/Turkey_female_common.png/revision/latest/scale-to-width-down/60?cb=20240427021816&path-prefix=es'
+    WHEN gender = '1' AND species_name = 'Water Buffalo' THEN 'https://static.wikia.nocookie.net/thehunter/images/3/3c/Water_buffalo_female_common.png/revision/latest/scale-to-width-down/60?cb=20240427021817&path-prefix=es'
+    WHEN gender = '1' AND species_name = 'White-tailed Ptarmigan' THEN 'https://static.wikia.nocookie.net/thehunter/images/d/de/White-tailed_ptarmigan_female_common.png/revision/latest/scale-to-width-down/60?cb=20240427021817&path-prefix=es'
+    WHEN gender = '1' AND species_name = 'Whitetail Deer' THEN 'https://static.wikia.nocookie.net/thehunter/images/2/2d/Whitetail_deer_female_common.png/revision/latest/scale-to-width-down/60?cb=20240427021815&path-prefix=es'
+    WHEN gender = '1' AND species_name = 'Wood Grouse' THEN 'https://static.wikia.nocookie.net/thehunter/images/e/e6/Wood_grouse_female_common.png/revision/latest/scale-to-width-down/60?cb=20240427021817&path-prefix=es'
+    ELSE animal_icon_url
+END"""
 
 
 DASHBOARDS = [
@@ -54,8 +86,8 @@ DASHBOARDS = [
         "uid": "thc-expediciones",
         "title": "THC - Expediciones",
         "panels": [
-            ("Expediciones", "SELECT * FROM api.vw_grafana_expeditions ORDER BY start_at DESC NULLS LAST LIMIT 100;"),
-            ("Abates por expedición", "SELECT * FROM api.vw_grafana_expedition_kills ORDER BY confirm_at DESC NULLS LAST LIMIT 200;"),
+            ("Resumen expediciones", "SELECT expedition_id AS \"Expedicion\", start_at AS \"Inicio\", end_at AS \"Fin\", hours AS \"Horas\", reserve_name AS \"Reserva\", kills AS \"Muertes\", collectables AS \"Coleccionables\", CASE WHEN singleplayer THEN '✓' ELSE '✕' END AS \"Solo\" FROM api.vw_grafana_expeditions ORDER BY start_at DESC NULLS LAST LIMIT 100;"),
+            ("Muertes con contexto de expedicion", f"SELECT expedition_id AS \"expedition id\", reserve_name AS \"Reserva\", start_at AS \"Inicio\", hours AS \"Horas exp.\", kills AS \"Muertes exp.\", animal_id AS \"animal id\", animal_profile_url AS \"Ficha animal\", {EXPEDITION_KILL_ICON_SQL} AS \"Icono\", species_name AS \"Especie\", CASE WHEN gender = '0' THEN '♂' WHEN gender = '1' THEN '♀' ELSE gender END AS \"Genero\", CASE WHEN ethical THEN '✓' ELSE '✕' END AS \"Etico\", score AS \"Puntuacion\", score_type AS \"Tipo score\", weight / 1000 AS \"Peso Kg\", photo_url AS \"Foto\", confirm_at AS \"Muerte\" FROM api.vw_grafana_expedition_kills_full WHERE animal_id IS NOT NULL ORDER BY confirm_at DESC NULLS LAST, start_at DESC NULLS LAST LIMIT 500;"),
         ],
     },
     {
@@ -157,6 +189,77 @@ def add_competition_id_link(panel: dict) -> None:
     properties.append({"id": "links", "value": [COMPETITION_LINK]})
 
 
+def field_override(field_name: str, properties: list[dict]) -> dict:
+    return {
+        "matcher": {"id": "byName", "options": field_name},
+        "properties": properties,
+    }
+
+
+def width(value: int) -> dict:
+    return {"id": "custom.width", "value": value}
+
+
+def align(value: str) -> dict:
+    return {"id": "custom.align", "value": value}
+
+
+def decimals(value: int) -> dict:
+    return {"id": "decimals", "value": value}
+
+
+def cell_options(value: dict) -> dict:
+    return {"id": "custom.cellOptions", "value": value}
+
+
+def links(value: list[dict]) -> dict:
+    return {"id": "links", "value": value}
+
+
+def hidden(value: bool = True) -> dict:
+    return {"id": "custom.hidden", "value": value}
+
+
+def configure_expedition_table(panel: dict, title: str) -> None:
+    if panel.get("type") != "table":
+        return
+
+    if title == "Muertes con contexto de expedicion":
+        panel["gridPos"] = {"h": 18, "w": 24, "x": 0, "y": 10}
+        panel.setdefault("options", {})["showHeader"] = True
+        panel.setdefault("fieldConfig", {})["overrides"] = [
+            field_override("expedition id", [width(104), align("center")]),
+            field_override("animal id", [width(108), align("center"), links([{"title": "Abrir ficha animal", "url": "${__data.fields[\"Ficha animal\"]}", "targetBlank": True}])]),
+            field_override("Ficha animal", [hidden()]),
+            field_override("Reserva", [width(150)]),
+            field_override("Inicio", [width(159)]),
+            field_override("Horas exp.", [width(90), decimals(2), align("right")]),
+            field_override("Muertes exp.", [width(95), align("right")]),
+            field_override("Icono", [width(62), cell_options({"type": "image"})]),
+            field_override("Especie", [width(190)]),
+            field_override("Genero", [width(78), align("center")]),
+            field_override("Etico", [width(70), align("center")]),
+            field_override("Puntuacion", [width(102), decimals(3), align("right"), cell_options({"type": "color-text"})]),
+            field_override("Tipo score", [width(96), align("center")]),
+            field_override("Peso Kg", [width(88), decimals(2), align("right")]),
+            field_override("Foto", [width(82), cell_options({"type": "image"}), links([PHOTO_LINK])]),
+            field_override("Muerte", [width(159)]),
+        ]
+    elif title == "Resumen expediciones":
+        panel["gridPos"] = {"h": 8, "w": 24, "x": 0, "y": 1}
+        panel.setdefault("options", {})["showHeader"] = True
+        panel.setdefault("fieldConfig", {})["overrides"] = [
+            field_override("Expedicion", [width(104), align("center")]),
+            field_override("Inicio", [width(159)]),
+            field_override("Fin", [width(159)]),
+            field_override("Horas", [width(75), decimals(2), align("right")]),
+            field_override("Reserva", [width(170)]),
+            field_override("Muertes", [width(80), align("right")]),
+            field_override("Coleccionables", [width(126), align("right")]),
+            field_override("Solo", [width(62), align("center")]),
+        ]
+
+
 def build_dashboard(template: dict, spec: dict) -> dict:
     dashboard = copy.deepcopy(template)
     dashboard["id"] = None
@@ -164,6 +267,8 @@ def build_dashboard(template: dict, spec: dict) -> dict:
     dashboard["title"] = spec["title"]
     dashboard["version"] = 0
     dashboard["editable"] = True
+    if spec["uid"] == "thc-expediciones":
+        dashboard["templating"] = {"list": []}
 
     table_template = next(panel for panel in template["panels"] if panel.get("type") == "table")
     panels = [
@@ -185,6 +290,8 @@ def build_dashboard(template: dict, spec: dict) -> dict:
         panel = base_panel(table_template, index + 1, title, raw_sql, x, y, w)
         if spec["uid"] == "thc-competiciones" and title == "Competiciones":
             add_competition_id_link(panel)
+        if spec["uid"] == "thc-expediciones":
+            configure_expedition_table(panel, title)
         panels.append(panel)
 
     dashboard["panels"] = panels

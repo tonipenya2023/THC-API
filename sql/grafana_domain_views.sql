@@ -109,6 +109,7 @@ SELECT weapon_id,
     usage_kill_share_pct "% Arma/Total Muertes"
    FROM vw_weapon_analytics;
 
+DROP VIEW IF EXISTS api.vw_grafana_expedition_kills_full CASCADE;
 DROP VIEW IF EXISTS api.vw_grafana_expeditions CASCADE;
 CREATE VIEW api.vw_grafana_expeditions AS
 SELECT
@@ -142,6 +143,33 @@ SELECT
     k.field_kill_field_photo AS photo_url,
     api.safe_timestamptz(k.field_kill_field_confirmts) AS confirm_at
 FROM api.query_statistics_expeditions_details_kills k;
+
+CREATE VIEW api.vw_grafana_expedition_kills_full AS
+SELECT
+    e.expedition_id,
+    e.reserve_name,
+    e.map_name,
+    e.start_at,
+    e.end_at,
+    e.hours,
+    e.kills,
+    e.collectables,
+    e.singleplayer,
+    k.animal_id,
+    k.animal_profile_url,
+    k.species_name,
+    k.animal_icon_url,
+    k.gender,
+    k.texture,
+    k.score,
+    k.score_type,
+    k.weight,
+    k.ethical,
+    k.photo_url,
+    k.confirm_at
+FROM api.vw_grafana_expeditions e
+LEFT JOIN api.vw_grafana_expedition_kills k
+    ON k.expedition_id = e.expedition_id;
 
 DROP VIEW IF EXISTS api.vw_grafana_gallery_photos CASCADE;
 CREATE VIEW api.vw_grafana_gallery_photos AS
