@@ -39,6 +39,8 @@ hacerse.
 
 Si el objetivo no está claro, preguntar antes de continuar.
 
+No leas ni modifiques otros archivos salvo que sea imprescindible.
+
 ------------------------------------------------------------------------
 
 # ALCANCE
