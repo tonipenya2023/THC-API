@@ -17,29 +17,17 @@ except Exception:
     pass
 
 from .thc_client import ThcApiError, call_function_with_requests, list_functions
-from .thc_dashboard import DashboardEncoder, get_dashboard_data
 
 
 HOST = "127.0.0.1"
 PORT = int(os.environ.get("THC_API_PORT", "8080"))
 BASE_DIR = Path(__file__).resolve().parents[1]
 INDEX_HTML_PATH = BASE_DIR / "assets" / "index.html"
-GRAFANA_HTML_PATH = BASE_DIR / "assets" / "grafana_dashboard.html"
 GRAFANA_DASHBOARD_PATH = BASE_DIR / "docs" / "grafana_dashboard_thc_hunter_v2.json"
 
 
 def load_index_html() -> str:
     return INDEX_HTML_PATH.read_text(encoding="utf-8")
-
-
-def load_grafana_html() -> str:
-    dashboard_url = os.environ.get("GRAFANA_DASHBOARD_URL", "").strip()
-    grafana_url = os.environ.get("GRAFANA_URL", "http://127.0.0.1:3001").strip()
-    return (
-        GRAFANA_HTML_PATH.read_text(encoding="utf-8")
-        .replace("__GRAFANA_DASHBOARD_URL__", dashboard_url)
-        .replace("__GRAFANA_URL__", grafana_url.rstrip("/"))
-    )
 
 
 def load_grafana_dashboard_json() -> str:
@@ -90,9 +78,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         path = urlparse(self.path).path
-        if path == "/":
-            self._send_html(load_grafana_html())
-        elif path == "/api-explorer":
+        if path == "/" or path == "/api-explorer":
             self._send_html(load_index_html())
         elif path.startswith("/assets/"):
             self._send_file(BASE_DIR / path.lstrip("/"))
@@ -102,8 +88,6 @@ class Handler(BaseHTTPRequestHandler):
             self._send_json({"status": "up"})
         elif path == "/api/functions":
             self._send_json(list_functions())
-        elif path == "/api/dashboard_data":
-            self._send_json(get_dashboard_data(), cls=DashboardEncoder)
         else:
             self._send_json({"error": "Not found"}, 404)
 
